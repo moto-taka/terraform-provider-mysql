@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/TakatoHano/terraform-provider-mysql/mysql"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
-	"github.com/terraform-providers/terraform-provider-mysql/mysql"
 )
 
 func main() {
