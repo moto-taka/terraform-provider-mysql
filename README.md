@@ -1,5 +1,6 @@
 # terraform-mysql-provider
 ==================
+
 Created from https://github.com/hashicorp/terraform-provider-mysql
 
 Requirements
