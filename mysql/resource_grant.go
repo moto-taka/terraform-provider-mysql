@@ -314,15 +314,21 @@ func DeleteGrant(d *schema.ResourceData, meta interface{}) error {
 }
 
 func ImportGrant(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// terraform import mysql_grant.user user@host
-	userHost := strings.SplitN(d.Id(), "@", 2)
+	// terraform import mysql_grant.user user@host:database
+	id := d.Id()
+	userHostDB := strings.SplitN(id, "@", 2)
 
-	if len(userHost) != 2 {
-		return nil, fmt.Errorf("wrong ID format %s (expected USER@HOST)", d.Id())
+	if len(userHostDB) != 2 {
+		return nil, fmt.Errorf("wrong ID format %s (expected USER@HOST:DATABASE)", d.Id())
 	}
 
-	user := userHost[0]
-	host := userHost[1]
+	user := userHostDB[0]
+	hostDB := strings.SplitN(userHostDB[1], ":", 2)
+	if len(hostDB) != 2 {
+		return nil, fmt.Errorf("wrong ID format %s (expected USER@HOST:DATABASE)", d.Id())
+	}
+	host := hostDB[0]
+	database := hostDB[1]
 
 	db, err := connectToMySQL(meta.(*MySQLConfiguration))
 
@@ -356,14 +362,12 @@ func ImportGrant(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceDa
 			return nil, fmt.Errorf("failed to parse grant statement: %s", grant)
 		}
 
-		privileges := splitPrivileges(m[1])
-		if len(privileges) == 0 {
+		if database != strings.Trim(m[2], "`") {
 			continue
 		}
-		database := strings.Trim(m[2], "`")
-		table := strings.Trim(m[3], "`")
-		id := fmt.Sprintf("%s@%s:%s", user, host, formatDatabaseName(database))
 
+		privileges := splitPrivileges(m[1])
+		table := strings.Trim(m[3], "`")
 		d := resourceGrant().Data(nil)
 		d.SetId(id)
 		d.Set("user", user)
@@ -374,6 +378,10 @@ func ImportGrant(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceDa
 		d.Set("privileges", privileges)
 
 		results = append(results, d)
+		break
+	}
+	if len(results) == 0 {
+		return nil, fmt.Errorf("grant of user %s, host %s, and database %s not found", user, host, database)
 	}
 
 	return results, nil
@@ -381,10 +389,6 @@ func ImportGrant(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceDa
 
 func splitPrivileges(privilegesStr string) []string {
 	var privileges []string
-	// USAGE Privilege is Default Usage
-	if strings.Trim(privilegesStr, "`") == "USAGE" {
-		return privileges
-	}
 
 	for _, v := range strings.Split(privilegesStr, ",") {
 		privileges = append(privileges, strings.TrimSpace(v))
