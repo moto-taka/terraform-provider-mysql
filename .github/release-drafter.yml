@@ -18,7 +18,9 @@ categories:
 version-resolver:
   major:
     labels:
-      - 'major'
+      - 'first'
+      - 'new_version'
+      - 'breaking'
   minor:
     labels:
       - 'feature'
