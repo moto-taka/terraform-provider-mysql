@@ -1,0 +1,6 @@
+enhancement: "*feat*/*"
+improvement: "*improve*/*"
+change: "*update*/*"
+bug: "*fix/*"
+chore: "*chore/*"
+refactor: "*refactor/*"
