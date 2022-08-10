@@ -84,3 +84,13 @@ The following arguments are supported:
 ## Attributes Reference
 
 No further attributes are exported.
+
+## Import
+
+User's privileges can be imported using user, host, and database e.g.
+
+```
+$ terraform import mysql_grant.jdoe jdoe@example.com:app
+```
+
+~> **Caution:** Currently, the only privileges that can be imported are for users, and those for roles are not yet supported.
