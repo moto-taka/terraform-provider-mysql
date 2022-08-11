@@ -1,12 +1,23 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-WEBSITE_REPO=github.com/hashicorp/terraform-website
-PKG_NAME=mysql
+
+HOSTNAME=local
+NAMESPACE=develop
+NAME=mysql
+BINARY=terraform-provider-${NAME}
+VERSION=0.0.7
+OS=$$(go env GOOS)
+ARCH=$$(go env GOARCH)
+OS_ARCH=${OS}_${ARCH}
 
 default: build
 
-build: fmtcheck
-	go install
+build:
+	go build -o ${BINARY}
+
+install: build
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
