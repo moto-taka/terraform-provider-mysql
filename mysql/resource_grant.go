@@ -331,7 +331,6 @@ func ImportGrant(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceDa
 	database := hostDB[1]
 
 	db, err := connectToMySQL(meta.(*MySQLConfiguration))
-
 	if err != nil {
 		return nil, err
 	}
