@@ -24,7 +24,7 @@ version-resolver:
       - 'breaking'
   minor:
     labels:
-      - 'feature'
+      - 'enhancement'
   patch:
     labels:
       - 'improvement'
