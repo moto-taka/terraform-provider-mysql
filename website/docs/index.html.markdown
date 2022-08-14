@@ -118,7 +118,7 @@ provider "mysql" {
 
   aws_ssm_session_manager_client_config {
     ec2_instance_id = resource.aws_instance.bastion.id
-    rds_endpoint    = aws_db_instance.default.db.endpoint
+    rds_endpoint    = resource.aws_db_instance.default.endpoint
     ssh_user        = local.ssh_user
     region          = local.region
     aws_profile     = local.aws_profile
