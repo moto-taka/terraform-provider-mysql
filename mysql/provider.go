@@ -97,6 +97,42 @@ func Provider() terraform.ResourceProvider {
 				Default:      nativePasswords,
 				ValidateFunc: validation.StringInSlice([]string{cleartextPasswords, nativePasswords}, true),
 			},
+
+			"aws_ssm_session_manager_client_config": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Configuration for use aws sesion manager.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ec2_instance_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"rds_endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"ssh_user": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"ssh_key_path": {
+							Type:        schema.TypeString,
+							DefaultFunc: schema.EnvDefaultFunc("PRIVATE_KEY_PATH", defaultSSHKeyPath()),
+							Optional:    true,
+						},
+						"aws_profile": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -138,6 +174,14 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	mysql.RegisterDial("tcp", func(network string) (net.Conn, error) {
 		return dialer.Dial("tcp", network)
 	})
+
+	sessionConf, err := parseSessionConfig(d)
+	if err != nil {
+		return nil, err
+	}
+	if err := connectSession(sessionConf); err != nil {
+		return nil, err
+	}
 
 	return &MySQLConfiguration{
 		Config:          &conf,
