@@ -127,7 +127,7 @@ provider "mysql" {
 ```
 ~> **Caution:** Currently, aws_profile supports [SSO profile](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html?icmpid=docs_sso_console) only.
 
-~> **Caution:** You need install Session Manager Plugin(https://docs.aws.amazon.com/ja_jp/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html).
+~> **Caution:** (Session Manager Plugin)(https://docs.aws.amazon.com/ja_jp/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) is required to be installed.
 
 
 ## Argument Reference
