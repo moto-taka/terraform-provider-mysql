@@ -83,8 +83,8 @@ github.com/davecgh/go-spew/spew
 # github.com/fatih/color v1.7.0
 ## explicit
 github.com/fatih/color
-# github.com/go-sql-driver/mysql v1.4.0
-## explicit
+# github.com/go-sql-driver/mysql v1.6.0
+## explicit; go 1.10
 github.com/go-sql-driver/mysql
 # github.com/gofrs/uuid v3.2.0+incompatible
 ## explicit
@@ -401,7 +401,6 @@ google.golang.org/api/transport/http/internal/propagation
 # google.golang.org/appengine v1.6.1
 ## explicit
 google.golang.org/appengine
-google.golang.org/appengine/cloudsql
 google.golang.org/appengine/datastore
 google.golang.org/appengine/datastore/internal/cloudkey
 google.golang.org/appengine/datastore/internal/cloudpb
