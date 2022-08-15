@@ -25,8 +25,6 @@ github.com/agext/levenshtein
 # github.com/apparentlymart/go-cidr v1.1.0
 ## explicit
 github.com/apparentlymart/go-cidr/cidr
-# github.com/apparentlymart/go-textseg v1.0.0
-## explicit
 # github.com/apparentlymart/go-textseg/v12 v12.0.0
 ## explicit; go 1.14
 github.com/apparentlymart/go-textseg/v12/textseg
@@ -168,8 +166,6 @@ github.com/hashicorp/go-uuid
 # github.com/hashicorp/go-version v1.6.0
 ## explicit
 github.com/hashicorp/go-version
-# github.com/hashicorp/golang-lru v0.5.1
-## explicit
 # github.com/hashicorp/hcl v1.0.0
 ## explicit
 github.com/hashicorp/hcl
@@ -194,10 +190,6 @@ github.com/hashicorp/hcl/v2/hclparse
 github.com/hashicorp/hcl/v2/hclsyntax
 github.com/hashicorp/hcl/v2/hclwrite
 github.com/hashicorp/hcl/v2/json
-# github.com/hashicorp/hcl2 v0.0.0-20190821123243-0c888d1241f6
-## explicit
-# github.com/hashicorp/hil v0.0.0-20190212112733-ab17b08d6590
-## explicit
 # github.com/hashicorp/logutils v1.0.0
 ## explicit
 github.com/hashicorp/logutils
@@ -361,8 +353,6 @@ github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash
 github.com/ulikunitz/xz/internal/xlog
 github.com/ulikunitz/xz/lzma
-# github.com/vmihailenco/msgpack v3.3.3+incompatible
-## explicit
 # github.com/vmihailenco/msgpack/v4 v4.3.12
 ## explicit; go 1.11
 github.com/vmihailenco/msgpack/v4
