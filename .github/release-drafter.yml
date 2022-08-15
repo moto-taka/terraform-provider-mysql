@@ -16,6 +16,7 @@ categories:
       - 'chore'
       - 'refactor'
       - 'documentation'
+      - 'renovate'
 version-resolver:
   major:
     labels:
