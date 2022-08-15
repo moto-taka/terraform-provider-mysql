@@ -115,20 +115,27 @@ func Provider() terraform.ResourceProvider {
 						},
 						"ssh_user": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"ssh_key_path": {
-							Type:        schema.TypeString,
-							DefaultFunc: schema.EnvDefaultFunc("PRIVATE_KEY_PATH", defaultSSHKeyPath()),
-							Optional:    true,
-						},
-						"aws_profile": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"aws_profile": {
+							Type: schema.TypeString,
+							DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+								"AWS_PROFILE",
+								"AWS_DEFAULT_PROFILE",
+							}, ""),
+							Optional: true,
+						},
 						"region": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type: schema.TypeString,
+							DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+								"AWS_REGION",
+								"AWS_DEFAULT_REGION",
+							}, ""),
+							Optional: true,
 						},
 					},
 				},

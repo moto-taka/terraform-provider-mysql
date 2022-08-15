@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"runtime"
 	"strconv"
@@ -54,10 +55,13 @@ func parseSessionConfig(d *schema.ResourceData) (*sessionConfig, error) {
 		conf.dbEndpoint = v
 	}
 
+	cu, _ := user.Current()
+	conf.sshUser = cu.Username
 	if v, ok := confMap["ssh_user"].(string); ok && v != "" {
 		conf.sshUser = v
 	}
 
+	conf.keyPath = defaultSSHKeyPath()
 	if v, ok := confMap["ssh_key_path"].(string); ok && v != "" {
 		conf.keyPath = v
 	}
@@ -96,20 +100,22 @@ func validateConfig(conf *sessionConfig) error {
 		errors = multierror.Append(errors, fmt.Errorf("not set ssh_user"))
 	}
 
-	if conf.keyPath == "" {
-		errors = multierror.Append(errors, fmt.Errorf("not set ssh_key_path"))
-	}
-
 	if _, err := os.Stat(conf.keyPath); err != nil {
 		errors = multierror.Append(errors, fmt.Errorf("ssh_key_path: %s is not exist", conf.keyPath))
+	}
+
+	if conf.profile == "" {
+		errors = multierror.Append(errors, fmt.Errorf("not set aws_profile"))
 	}
 
 	if conf.region == "" {
 		errors = multierror.Append(errors, fmt.Errorf("not set region"))
 	}
+
 	if errors != nil {
 		return errors
 	}
+
 	return nil
 }
 
