@@ -166,8 +166,8 @@ provider "mysql" {
 
 ~> **Notes.** [Setting up Session Manager.](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
 
-* `ec2_instance_id` - (Required) The EC2 server can connect the RDS to use. If you are managing by Terraform, you can set the value from resource.aws_db_instance or [resource.aws_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)'s endpoint.
-* `rds_endpoint` - (Required) The endpoint of the RDS to use. If you are managing by Terraform, you can set the value from [resource.aws_db_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) or [resource.aws_rds_cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster)'s endpoint.
+* `ec2_instance_id` - (Required) The EC2 server can connect the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)'s endpoint.
+* `rds_endpoint` - (Required) The endpoint of the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_db_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) or [`resource.aws_rds_cluster`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster)'s endpoint.
 * `ssh_user` - (Optional) SSH user name. Defaults to current user name.
 * `ssh_key_path` - (Optional) SSH user's private key path. Default to `~/.ssh/id_rsa`
 * `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables.
