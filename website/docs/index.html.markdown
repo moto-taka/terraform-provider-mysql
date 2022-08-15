@@ -100,7 +100,7 @@ resource "aws_db_instance" "default" {
   # etc, etc; see aws_db_instance docs for more
 }
 
-# Create a bastions server (installed SSM Agent)
+# Create a server for bastion. (installed SSM Agent)
 resource "aws_instance" "bastion" {
   # attach i am role (based on AmazonSSMMManagedInstanceCore Policy)
   iam_instance_profile = resource.aws_iam_role.ssm_role.name
@@ -120,14 +120,15 @@ provider "mysql" {
     ec2_instance_id = resource.aws_instance.bastion.id
     rds_endpoint    = resource.aws_db_instance.default.endpoint
     ssh_user        = local.ssh_user
-    region          = local.region
+    ssh_key_path    = local.ssh_key_path
     aws_profile     = local.aws_profile
+    region          = local.region
   }
 }
 ```
 ~> **Caution:** Currently, aws_profile supports [SSO profile](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html?icmpid=docs_sso_console) only.
 
-~> **Caution:** [Session Manager Plugin](https://docs.aws.amazon.com/ja_jp/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) is required to be installed.
+~> **Caution:** [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) is required to be installed.
 
 
 ## Argument Reference
@@ -142,3 +143,32 @@ The following arguments are supported:
 * `max_conn_lifetime_sec` - (Optional) Sets the maximum amount of time a connection may be reused. If d <= 0, connections are reused forever.
 * `max_open_conns` - (Optional) Sets the maximum number of open connections to the database. If n <= 0, then there is no limit on the number of open connections.
 * `authentication_plugin` - (Optional) Sets the authentication plugin, it can be one of the following: `native` or `cleartext`. Defaults to `native`.
+* `aws_ssm_session_manager_client_config` - (Optional) Configuration for use aws ssm sesion manager.
+
+### aws_ssm_session_manager_client_config Argument Reference
+
+Example:
+
+```hcl
+provider "mysql" {
+  # ... other configuration ...
+
+  aws_ssm_session_manager_client_config {
+    ec2_instance_id = resource.aws_instance.bastion.id
+    rds_endpoint    = resource.aws_db_instance.default.endpoint
+    ssh_user        = local.ssh_user
+    ssh_key_path    = local.ssh_key_path
+    aws_profile     = local.aws_profile
+    region          = local.region
+  }
+}
+```
+
+~> **Notes.** [Setting up Session Manager.](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+
+* `ec2_instance_id` - (Required) The EC2 server can connect the RDS to use. If you are managing by Terraform, you can set the value from resource.aws_db_instance or [resource.aws_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)'s endpoint.
+* `rds_endpoint` - (Required) The endpoint of the RDS to use. If you are managing by Terraform, you can set the value from [resource.aws_db_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) or [resource.aws_rds_cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster)'s endpoint.
+* `ssh_user` - (Optional) SSH user name. Defaults to current user name.
+* `ssh_key_path` - (Optional) SSH user's private key path. Default to `~/.ssh/id_rsa`
+* `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables.
+* `region` -  (Optional) AWS region, can also be sourced from the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
