@@ -1,0 +1,14 @@
+version: '3'
+services:
+  bulder:
+    build:
+      context: .
+      args:
+        host_uid: $CUID
+        host_gid: $CGID
+        user: $CU
+    tty: true
+    volumes:
+      - ../:/go/src/terraform-provider-mysql
+      - ~/.terraform.d/plugins:/home/$USER/.terraform.d/plugins
+    working_dir: /go/src/terraform-provider-mysql

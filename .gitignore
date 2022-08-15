@@ -32,5 +32,4 @@ website/vendor
 !command/test-fixtures/**/.terraform/
 
 # Private settinga
-.devcontainer
-.vscode
+.env

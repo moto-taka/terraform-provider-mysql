@@ -1,0 +1,17 @@
+{
+  "name": "Go",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "bulder",
+  "workspaceFolder": "/go/src/terraform-provider-mysql",
+  "extensions": [
+    "golang.Go",
+    "golang.go-nightly",
+    "766b.go-outliner",
+    "oderwat.indent-rainbow",
+    "aaron-bond.better-comments",
+    "dzhavat.bracket-pair-toggler"
+  ],
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  }
+}
