@@ -26,8 +26,7 @@ import (
 
 type sessionConfig struct {
 	instanceID string
-	profile    string
-	region     string
+	session    *session.Session
 	sshUser    string
 	keyPath    string
 	localPort  uint16
@@ -66,13 +65,20 @@ func parseSessionConfig(d *schema.ResourceData) (*sessionConfig, error) {
 		conf.keyPath = v
 	}
 
+	profile := ""
 	if v, ok := confMap["aws_profile"].(string); ok && v != "" {
-		conf.profile = v
+		profile = v
+	}
+	region := ""
+	if v, ok := confMap["region"].(string); ok && v != "" {
+		region = v
 	}
 
-	if v, ok := confMap["region"].(string); ok && v != "" {
-		conf.region = v
-	}
+	conf.session, _ = session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable, // Must be set to enable
+		Profile:           profile,
+		Config:            aws.Config{Region: aws.String(region)},
+	})
 
 	if err := validateConfig(conf); err != nil {
 		return nil, err
@@ -104,12 +110,8 @@ func validateConfig(conf *sessionConfig) error {
 		errors = multierror.Append(errors, fmt.Errorf("ssh_key_path: %s is not exist", conf.keyPath))
 	}
 
-	if conf.profile == "" {
-		errors = multierror.Append(errors, fmt.Errorf("not set aws_profile"))
-	}
-
-	if conf.region == "" {
-		errors = multierror.Append(errors, fmt.Errorf("not set region"))
+	if conf.session == nil {
+		errors = multierror.Append(errors, fmt.Errorf("AWS configure is not a valid"))
 	}
 
 	if errors != nil {
@@ -123,16 +125,7 @@ func connectSession(conf *sessionConfig) error {
 	if conf == nil {
 		return nil
 	}
-	sess, err := session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable, // Must be set to enable
-		Profile:           conf.profile,
-		Config:            aws.Config{Region: aws.String(conf.region)},
-	})
-	if err != nil {
-		return err
-	}
-
-	proxyCmd, closeSession, err := openSession(ssm.New(sess), conf.instanceID)
+	proxyCmd, closeSession, err := openSession(ssm.New(conf.session), conf.instanceID)
 	if err != nil {
 		return err
 	}
