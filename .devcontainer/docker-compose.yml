@@ -11,4 +11,7 @@ services:
     volumes:
       - ../:/go/src/terraform-provider-mysql
       - ~/.terraform.d/plugins:/home/$USER/.terraform.d/plugins
+      - ~/go/pkg:/go/pkg
     working_dir: /go/src/terraform-provider-mysql
+    environment:
+      GO111MODULE: on
