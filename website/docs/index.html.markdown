@@ -126,8 +126,6 @@ provider "mysql" {
   }
 }
 ```
-~> **Caution:** Currently, aws_profile supports [SSO profile](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html?icmpid=docs_sso_console) only.
-
 ~> **Caution:** [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) is required to be installed.
 
 
@@ -166,9 +164,9 @@ provider "mysql" {
 
 ~> **Notes.** [Setting up Session Manager.](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
 
-* `ec2_instance_id` - (Required) The EC2 server can connect the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)'s id.
+* `ec2_instance_id` - (Required) The EC2 server can connect the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)'s endpoint.
 * `rds_endpoint` - (Required) The endpoint of the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_db_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) or [`resource.aws_rds_cluster`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster)'s endpoint.
 * `ssh_user` - (Optional) SSH user name. Defaults to current user name.
 * `ssh_key_path` - (Optional) SSH user's private key path. Default to `~/.ssh/id_rsa`
-* `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables.
+* `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables. If you use AWS credential, can aloso be sourced from the `AWS_ACCESS_KEY_ID`,`AWS_SECRET_ACCESS_KEY_ID`, and `AWS_SESSION_TOKEN` environment variables.
 * `region` -  (Optional) AWS region, can also be sourced from the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
