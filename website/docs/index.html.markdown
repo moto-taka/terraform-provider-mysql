@@ -128,6 +128,59 @@ provider "mysql" {
 ```
 ~> **Caution:** [Session Manager Plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) is required to be installed.
 
+## Port forward through public bastion
+
+~> **Caution:** This is a feature in development.
+
+```hcl
+
+# Create VPC and Subnets
+module "vpc" {
+
+  # (sample value)
+  public_subnets   = ["10.99.0.0/24", "10.99.1.0/24", "10.99.2.0/24"]
+  private_subnets  = ["10.99.3.0/24", "10.99.4.0/24", "10.99.5.0/24"]
+  database_subnets = ["10.99.7.0/24", "10.99.8.0/24", "10.99.9.0/24"]
+
+  create_database_subnet_group = true
+  enable_nat_gateway           = false
+  single_nat_gateway           = true
+
+  # etc, etc; see vpc module docs for more
+}
+# Create a database server
+resource "aws_db_instance" "default" {
+  # attach database_subnet (private)
+  db_subnet_group_name       = module.vpc.database_subnet_group_name
+
+  # etc, etc; see aws_db_instance docs for more
+}
+
+# Create a public server for bastion.
+resource "aws_instance" "bastion" {
+  # attach i am role (based on AmazonSSMMManagedInstanceCore Policy)
+  iam_instance_profile = resource.aws_iam_role.ssm_role.name
+  # attach public_subnet
+  subnet_id            = module.vpc.public_subnets[0]
+  # etc, etc; see aws_instance docs for more
+}
+
+# Configure the MySQL provider based on the outcome of
+# creating the aws_db_instance.
+provider "mysql" {
+  endpoint = "localhost:${unused_port}"
+  username = "${aws_db_instance.default.username}"
+  password = "${aws_db_instance.default.password}"
+
+  port_forward_client_config {
+    ec2_instance_id = resource.aws_instance.bastion.id
+    db_endpoint     = resource.aws_db_instance.default.endpoint
+    ssh_user        = local.ssh_user
+    ssh_key_path    = local.ssh_key_path
+  }
+}
+```
+
 
 ## Argument Reference
 
@@ -142,6 +195,7 @@ The following arguments are supported:
 * `max_open_conns` - (Optional) Sets the maximum number of open connections to the database. If n <= 0, then there is no limit on the number of open connections.
 * `authentication_plugin` - (Optional) Sets the authentication plugin, it can be one of the following: `native` or `cleartext`. Defaults to `native`.
 * `aws_ssm_session_manager_client_config` - (Optional) Configuration for use aws ssm sesion manager.
+* `port_forward_client_config` - (Optional) Configuration for port fowarding through public bastion.
 
 ### aws_ssm_session_manager_client_config Argument Reference
 
@@ -150,6 +204,9 @@ Example:
 ```hcl
 provider "mysql" {
   # ... other configuration ...
+
+  # endopoint's host must be localhost, and port is unused. 
+  endpoint = "localhost:${unused_port}"
 
   aws_ssm_session_manager_client_config {
     ec2_instance_id = resource.aws_instance.bastion.id
@@ -170,3 +227,30 @@ provider "mysql" {
 * `ssh_key_path` - (Optional) SSH user's private key path. Default to `~/.ssh/id_rsa`
 * `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables. If you use AWS credential, can aloso be sourced from the `AWS_ACCESS_KEY_ID`,`AWS_SECRET_ACCESS_KEY_ID`, and `AWS_SESSION_TOKEN` environment variables.
 * `region` -  (Optional) AWS region, can also be sourced from the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
+
+### port_forward_client_config Argument Reference
+
+Example:
+
+```hcl
+provider "mysql" {
+  # ... other configuration ...
+
+  # endopoint's host must be localhost, and port is unused. 
+  endpoint = "localhost:${unused_port}"
+
+  port_forward_client_config {
+    remote_host     = resource.aws_instance.bastion.public_ip
+    rds_endpoint    = resource.aws_db_instance.default.endpoint
+    ssh_user        = local.ssh_user
+    ssh_key_path    = local.ssh_key_path
+  }
+}
+```
+
+~> **Notes.** [Setting up Session Manager.](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+
+* `remote_host` - (Required) The IP or host of public bastion server can connect the DB server to use.
+* `rds_endpoint` - (Required) The endpoint of the DB server to use.
+* `ssh_user` - (Optional) SSH user name. Defaults to current user name.
+* `ssh_key_path` - (Optional) SSH user's private key path. Default to `~/.ssh/id_rsa`
