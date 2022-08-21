@@ -6,9 +6,11 @@ import (
 	"net"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/TakatoHano/terraform-provider-mysql/mysql/port_forward"
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/go-version"
 
@@ -140,6 +142,32 @@ func Provider() terraform.ResourceProvider {
 					},
 				},
 			},
+			"port_forward_client_config": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Configuration for Port Forward.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"remote_host": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"db_endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"ssh_user": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssh_key_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -182,11 +210,23 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return dialer.Dial("tcp", network)
 	})
 
-	sessionConf, err := parseSessionConfig(d)
+	sessionConf, pfConfMap, err := port_forward.ParseSessionConfig(d)
 	if err != nil {
 		return nil, err
 	}
-	if err := connectSession(sessionConf); err != nil {
+	if pfConfMap == nil {
+		pfConfMap, err = port_forward.ParsePFConfigMap(d)
+		if err != nil {
+			return nil, err
+		}
+	}
+	lp, _ := strconv.Atoi(strings.SplitN(d.Get("endpoint").(string), ":", 2)[1])
+	pfConf, err := port_forward.ParsePFConfig(pfConfMap, uint16(lp))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := port_forward.Connect(sessionConf, pfConf); err != nil {
 		return nil, err
 	}
 
