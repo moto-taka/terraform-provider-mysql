@@ -29,3 +29,27 @@ provider "mysql" {
   }
 }
 ```
+
+Or, Port Forwarding through public server
+
+```hcl
+terraform {
+  required_providers {
+    mysql = {
+      source = "TakatoHano/mysql"
+    }
+  }
+}
+
+provider "mysql" {
+  # Configuration options
+  endpoint = "localhost:${unused_port}"
+  username = "${aws_db_instance.db.username}"
+  password = "${aws_db_instance.db.password}"
+  
+  port_forward_client_config {
+    remote_host = resource.aws_instance.bastion.public_ip
+    db_endpoint = resource.aws_db_instance.db.endpoint
+  }
+}
+```
