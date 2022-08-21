@@ -248,8 +248,6 @@ provider "mysql" {
 }
 ```
 
-~> **Notes.** [Setting up Session Manager.](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
-
 * `remote_host` - (Required) The IP or host of public bastion server can connect the DB server to use.
 * `rds_endpoint` - (Required) The endpoint of the DB server to use.
 * `ssh_user` - (Optional) SSH user name. Defaults to current user name.
