@@ -423,7 +423,7 @@ golang.org/x/lint/golint
 ## explicit; go 1.12
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20220812174116-3211cb980234
+# golang.org/x/net v0.0.0-20220822230855-b0a4917ee28c
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
