@@ -132,7 +132,6 @@ func (conf *sessionConfig) connect(pfConf *portFowardConfig) error {
 
 		go func() {
 			proxyCmd.Wait()
-			closeSession()
 		}()
 		return nil
 	}
