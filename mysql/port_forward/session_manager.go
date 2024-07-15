@@ -1,3 +1,5 @@
+//  port_forward/session_manager.go
+
 package port_forward
 
 import (
@@ -8,6 +10,7 @@ import (
 	"os/user"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -64,15 +67,21 @@ func ParseSessionConfig(d *schema.ResourceData) (*sessionConfig, map[string]stri
 		pfConf["db_endpoint"] = v
 	}
 
-	cu, _ := user.Current()
-	pfConf["ssh_user"] = cu.Username
-	if v, ok := confMap["ssh_user"].(string); ok && v != "" {
-		pfConf["ssh_user"] = v
+	if v, ok := confMap["use_remote_port_forward"].(bool); ok {
+		pfConf["use_remote_port_forward"] = strconv.FormatBool(v)
 	}
 
-	pfConf["ssh_key_path"] = defaultSSHKeyPath()
-	if v, ok := confMap["ssh_key_path"].(string); ok && v != "" {
-		pfConf["ssh_key_path"] = v
+	if pfConf["use_remote_port_forward"] == "false" {
+		cu, _ := user.Current()
+		pfConf["ssh_user"] = cu.Username
+		if v, ok := confMap["ssh_user"].(string); ok && v != "" {
+			pfConf["ssh_user"] = v
+		}
+
+		pfConf["ssh_key_path"] = defaultSSHKeyPath()
+		if v, ok := confMap["ssh_key_path"].(string); ok && v != "" {
+			pfConf["ssh_key_path"] = v
+		}
 	}
 
 	return sessionConf, pfConf, nil
@@ -107,7 +116,27 @@ func (conf *sessionConfig) validate() error {
 }
 
 func (conf *sessionConfig) connect(pfConf *portFowardConfig) error {
-	proxyCmd, closeSession, err := openSession(ssm.New(conf.session), conf.instanceID)
+	var proxyCmd *exec.Cmd
+	var closeSession func() error
+	var err error
+
+	if pfConf.useRemotePortForward {
+		proxyCmd, closeSession, err = openRemotePortForwardSession(ssm.New(conf.session), conf.instanceID, pfConf.dbEndpoint, pfConf.localPort)
+		if err != nil {
+			return err
+		}
+
+		if err := proxyCmd.Start(); err != nil {
+			return err
+		}
+
+		go func() {
+			proxyCmd.Wait()
+			closeSession()
+		}()
+		return nil
+	}
+	proxyCmd, closeSession, err = openSession(ssm.New(conf.session), conf.instanceID)
 	if err != nil {
 		return err
 	}
@@ -157,6 +186,49 @@ func openSession(svc *ssm.SSM, instanceID string) (*exec.Cmd, func() error, erro
 		DocumentName: aws.String("AWS-StartSSHSession"),
 		Parameters: map[string][]*string{
 			"portNumber": {aws.String("22")},
+		},
+		Target: aws.String(instanceID),
+	}
+	out, err := svc.StartSession(in)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	close := func() error {
+		in := &ssm.TerminateSessionInput{
+			SessionId: out.SessionId,
+		}
+		if _, err := svc.TerminateSession(in); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	cmd, err := sessionManagerPlugin(svc, in, out)
+	if err != nil {
+		defer close()
+		return nil, nil, err
+	}
+
+	return cmd, close, nil
+}
+
+func openRemotePortForwardSession(svc *ssm.SSM, instanceID string, dbEndpoint string, localPort uint16) (*exec.Cmd, func() error, error) {
+	host := dbEndpoint
+	port := "3306"
+
+	if strings.Contains(dbEndpoint, ":") {
+		split := strings.Split(dbEndpoint, ":")
+		host = split[0]
+		port = split[1]
+	}
+
+	in := &ssm.StartSessionInput{
+		DocumentName: aws.String("AWS-StartPortForwardingSessionToRemoteHost"),
+		Parameters: map[string][]*string{
+			"host":            {aws.String(host)},
+			"portNumber":      {aws.String(port)},
+			"localPortNumber": {aws.String(strconv.Itoa(int(localPort)))},
 		},
 		Target: aws.String(instanceID),
 	}
