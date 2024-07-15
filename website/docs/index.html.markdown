@@ -119,6 +119,7 @@ provider "mysql" {
   aws_ssm_session_manager_client_config {
     ec2_instance_id = resource.aws_instance.bastion.id
     rds_endpoint    = resource.aws_db_instance.default.endpoint
+    use_remote_port_forward = false
     ssh_user        = local.ssh_user
     ssh_key_path    = local.ssh_key_path
     aws_profile     = local.aws_profile
@@ -201,6 +202,10 @@ The following arguments are supported:
 
 Example:
 
+
+This configuration connects to the RDS instance by SSHing into the EC2 instance and then establishing a port forward to the RDS endpoint.
+
+
 ```hcl
 provider "mysql" {
   # ... other configuration ...
@@ -211,8 +216,31 @@ provider "mysql" {
   aws_ssm_session_manager_client_config {
     ec2_instance_id = resource.aws_instance.bastion.id
     rds_endpoint    = resource.aws_db_instance.default.endpoint
+    use_remote_port_forward = false
     ssh_user        = local.ssh_user
     ssh_key_path    = local.ssh_key_path
+    aws_profile     = local.aws_profile
+    region          = local.region
+  }
+}
+```
+
+
+This alternative configuration uses AWS Systems Manager Session Manager to connect to the EC2 instance and establish a remote port forward to the RDS endpoint, without the need for SSH access.
+
+By setting `use_remote_port_forward` to `true`, it utilizes the AWS-StartPortForwardingSessionToRemoteHost API to create the port forward, ignoring the `ssh_user` and `ssh_key_path` options.
+
+```hcl
+provider "mysql" {
+  # ... other configuration ...
+
+  # endopoint's host must be localhost, and port is unused. 
+  endpoint = "localhost:${unused_port}"
+
+  aws_ssm_session_manager_client_config {
+    ec2_instance_id = resource.aws_instance.bastion.id
+    rds_endpoint    = resource.aws_db_instance.default.endpoint
+    use_remote_port_forward = false
     aws_profile     = local.aws_profile
     region          = local.region
   }
@@ -223,9 +251,10 @@ provider "mysql" {
 
 * `ec2_instance_id` - (Required) The EC2 server can connect the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)'s endpoint.
 * `rds_endpoint` - (Required) The endpoint of the RDS to use. If you are managing by Terraform, you can set the value from [`resource.aws_db_instance`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance) or [`resource.aws_rds_cluster`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster)'s endpoint.
+* `use_remote_port_forward` - (Optional) Use remote port forward using AWS-StartPortForwardingSessionToRemoteHost. Defaults to `true`. When this is specified, `ssh_user` and `ssh_key_path` are ignored.
 * `ssh_user` - (Optional) SSH user name. Defaults to current user name.
 * `ssh_key_path` - (Optional) SSH user's private key path. Default to `~/.ssh/id_rsa`
-* `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables. If you use AWS credential, can aloso be sourced from the `AWS_ACCESS_KEY_ID`,`AWS_SECRET_ACCESS_KEY_ID`, and `AWS_SESSION_TOKEN` environment variables.
+* `aws_profile` - (Optional) AWS user's profile(SSO logged in), can also be sourced from the `AWS_PROFILE` or `AWS_DEFAULT_PROFILE` environment variables. If you use AWS credential, can also be sourced from the `AWS_ACCESS_KEY_ID`,`AWS_SECRET_ACCESS_KEY_ID`, and `AWS_SESSION_TOKEN` environment variables.
 * `region` -  (Optional) AWS region, can also be sourced from the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
 
 ### port_forward_client_config Argument Reference
