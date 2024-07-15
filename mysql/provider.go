@@ -1,3 +1,5 @@
+// provider.go
+
 package mysql
 
 import (
@@ -10,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TakatoHano/terraform-provider-mysql/mysql/port_forward"
 	"github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/go-version"
+	"github.com/moto-taka/terraform-provider-mysql/mysql/port_forward"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -114,6 +116,11 @@ func Provider() terraform.ResourceProvider {
 						"rds_endpoint": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"use_remote_port_forward": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 						"ssh_user": {
 							Type:     schema.TypeString,

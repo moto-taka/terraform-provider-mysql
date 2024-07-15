@@ -1,3 +1,5 @@
+//  port_forward/port_fowarder.go
+
 package port_forward
 
 import (
@@ -11,6 +13,8 @@ import (
 	"os/user"
 	"path"
 
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"golang.org/x/crypto/ssh"
@@ -18,11 +22,12 @@ import (
 )
 
 type portFowardConfig struct {
-	sshUser        string
-	keyPath        string
-	localPort      uint16
-	remoteEndpoint string
-	dbEndpoint     string
+	sshUser              string
+	keyPath              string
+	localPort            uint16
+	remoteEndpoint       string
+	dbEndpoint           string
+	useRemotePortForward bool
 }
 
 func ParsePFConfigMap(d *schema.ResourceData) (map[string]string, error) {
@@ -59,7 +64,6 @@ func ParsePFConfigMap(d *schema.ResourceData) (map[string]string, error) {
 	}
 
 	return pfConf, nil
-
 }
 
 func ParsePFConfig(confMap map[string]string, localPort uint16) (*portFowardConfig, error) {
@@ -79,6 +83,14 @@ func ParsePFConfig(confMap map[string]string, localPort uint16) (*portFowardConf
 
 	if v, ok := confMap["db_endpoint"]; ok && v != "" {
 		conf.dbEndpoint = v
+	}
+
+	if v, ok := confMap["use_remote_port_forward"]; ok && v != "" {
+		conf.useRemotePortForward = true
+	}
+
+	if conf.useRemotePortForward {
+		return conf, nil
 	}
 	cu, _ := user.Current()
 	conf.sshUser = cu.Username
@@ -125,18 +137,44 @@ func (pfConf *portFowardConfig) Connect() error {
 		return nil
 	}
 
-	sshConfig, err := pfConf.CreateSSHClientConfig()
-	if err != nil {
-		return err
-	}
+	if pfConf.useRemotePortForward {
+		sessConf, err := session.NewSessionWithOptions(session.Options{
+			SharedConfigState: session.SharedConfigEnable,
+		})
+		if err != nil {
+			return err
+		}
 
-	client, err := pfConf.CreateSSHClient(sshConfig)
-	if err != nil {
-		return err
-	}
+		svc := ssm.New(sessConf)
+		cmd, closeSession, err := openRemotePortForwardSession(svc, pfConf.remoteEndpoint, pfConf.dbEndpoint, pfConf.localPort)
+		if err != nil {
+			return err
+		}
 
-	if err := pfConf.PortForward(client); err != nil {
-		return err
+		if err := cmd.Start(); err != nil {
+			return err
+		}
+
+		// セッションをバックグラウンドで実行し、後続のコマンドが実行できるようにする
+		go func() {
+			cmd.Wait()
+			closeSession()
+		}()
+		return nil
+	} else {
+		sshConfig, err := pfConf.CreateSSHClientConfig()
+		if err != nil {
+			return err
+		}
+
+		client, err := pfConf.CreateSSHClient(sshConfig)
+		if err != nil {
+			return err
+		}
+
+		if err := pfConf.PortForward(client); err != nil {
+			return err
+		}
 	}
 
 	return nil

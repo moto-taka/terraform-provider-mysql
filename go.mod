@@ -1,4 +1,4 @@
-module github.com/TakatoHano/terraform-provider-mysql
+module github.com/moto-taka/terraform-provider-mysql
 
 require (
 	github.com/aws/aws-sdk-go v1.44.89
@@ -89,4 +89,4 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 )
 
-go 1.18
+go 1.22
