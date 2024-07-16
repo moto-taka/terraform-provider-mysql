@@ -86,6 +86,10 @@ func ParsePFConfig(confMap map[string]string, localPort uint16) (*portFowardConf
 		conf.useRemotePortForward = true
 	}
 
+	if conf.useRemotePortForward {
+		return conf, nil
+	}
+
 	cu, _ := user.Current()
 	conf.sshUser = cu.Username
 	if v, ok := confMap["ssh_user"]; ok && v != "" {
