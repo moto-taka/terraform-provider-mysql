@@ -240,7 +240,7 @@ provider "mysql" {
   aws_ssm_session_manager_client_config {
     ec2_instance_id = resource.aws_instance.bastion.id
     rds_endpoint    = resource.aws_db_instance.default.endpoint
-    use_remote_port_forward = false
+    use_remote_port_forward = true
     aws_profile     = local.aws_profile
     region          = local.region
   }

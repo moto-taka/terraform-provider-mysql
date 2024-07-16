@@ -1,5 +1,3 @@
-// provider.go
-
 package mysql
 
 import (

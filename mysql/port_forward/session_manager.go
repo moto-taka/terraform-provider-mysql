@@ -1,5 +1,3 @@
-//  port_forward/session_manager.go
-
 package port_forward
 
 import (
@@ -212,12 +210,12 @@ func openSession(svc *ssm.SSM, instanceID string) (*exec.Cmd, func() error, erro
 	return cmd, close, nil
 }
 
-func openRemotePortForwardSession(svc *ssm.SSM, instanceID string, dbEndpoint string, localPort uint16) (*exec.Cmd, func() error, error) {
-	host := dbEndpoint
+func openRemotePortForwardSession(svc *ssm.SSM, instanceID string, rdsEndpoint string, localPort uint16) (*exec.Cmd, func() error, error) {
+	host := rdsEndpoint
 	port := "3306"
 
-	if strings.Contains(dbEndpoint, ":") {
-		split := strings.Split(dbEndpoint, ":")
+	if strings.Contains(rdsEndpoint, ":") {
+		split := strings.Split(rdsEndpoint, ":")
 		host = split[0]
 		port = split[1]
 	}
@@ -231,6 +229,7 @@ func openRemotePortForwardSession(svc *ssm.SSM, instanceID string, dbEndpoint st
 		},
 		Target: aws.String(instanceID),
 	}
+
 	out, err := svc.StartSession(in)
 	if err != nil {
 		return nil, nil, err
